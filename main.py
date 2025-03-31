@@ -52,8 +52,8 @@ if __name__ == '__main__':
     main()
 """
 
-class Calculator:
-    def evaluate(self, expression):
+class Generator:
+    def generate(self, expression):
         try:
             lexer = Lexer(expression)
             parser = Parser(lexer)
@@ -130,11 +130,12 @@ def write_to_file(filename, content):
         file.write(content)
 
 if __name__ == "__main__":
-    calc = Calculator()
+    calc = Generator()
     input_text = input("Enter regular expression:")
+    print("Derivation tree:\n")
 
     if input_text != "":
-        nka = calc.evaluate(input_text)
+        nka = calc.generate(input_text)
         start_state = nka.start_state
 
         assign_ids(start_state)
@@ -151,4 +152,4 @@ if __name__ == "__main__":
 
         output_content = transition_table_content + "\n" + accepted_states_content + template
         write_to_file("nka.py", output_content)
-        print("File nka.py was generated");
+        print("\n\nFile nka.py was generated")
