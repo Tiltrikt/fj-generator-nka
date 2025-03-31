@@ -127,7 +127,7 @@ def write_to_file(filename, content):
 
 if __name__ == "__main__":
     generator = Generator()
-    input_text = input("Enter regular expression:")
+    input_text = input("Enter regular expression: ")
     print("Derivation tree:\n")
 
     try:

@@ -1,5 +1,6 @@
 from Lexer import TokenType
 from PrettyPrint import PrettyPrintTree
+# pip install PrettyPrintTree
 
 class Tree:
     def __init__(self, value):
