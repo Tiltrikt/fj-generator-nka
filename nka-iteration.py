@@ -53,11 +53,10 @@ def main():
     nka = NKA(_transition_table, _accepted_states)
 
     while input_text != "quit":
-        if input_text != "":
-            if nka.evaluate_expression(input_text, 0):
-                print(f'Word "{input_text}" ACCEPTED')
-            else:
-                print(f'Word "{input_text}" REJECTED')
+        if nka.evaluate_expression(input_text, 0):
+            print(f"Word '{input_text}' is ACCEPTED!")
+        else:
+            print(f"Word '{input_text}' is NOT ACCEPTED!")
         input_text = input("Enter a word: ")
 
 if __name__ == '__main__':

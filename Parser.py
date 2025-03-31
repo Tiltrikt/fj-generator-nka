@@ -52,7 +52,14 @@ class Parser:
     def regular(self) -> NKA:
         pt = PrettyPrintTree(lambda x: x.children, lambda x: x.val)
         tree = Tree("regular")
-        result = self.alternative(tree)
+        if self.current_token.type == TokenType.EOF:
+            nka = NKA()
+            start_node = StateNode()
+            nka.start_state = start_node
+            nka.accepted_states.add(start_node)
+            result = nka
+        else:
+            result = self.alternative(tree)
         pt(tree)
         return result
 

@@ -41,11 +41,10 @@ def main():
     nka = NKA(_transition_table, _accepted_states)
 
     while input_text != "quit":
-        if input_text != "":
-            if nka.evaluate_expression(input_text, 0):
-                print(f'Word "{input_text}" ACCEPTED')
-            else:
-                print(f'Word "{input_text}" REJECTED')
+        if nka.evaluate_expression(input_text, 0):
+            print(f"Word '{input_text}' is ACCEPTED!")
+        else:
+            print(f"Word '{input_text}' is NOT ACCEPTED!")
         input_text = input("Enter a word: ")
 
 if __name__ == '__main__':
@@ -54,13 +53,10 @@ if __name__ == '__main__':
 
 class Generator:
     def generate(self, expression):
-        try:
             lexer = Lexer(expression)
             parser = Parser(lexer)
             result = parser.parse()
             return result
-        except Exception as e:
-            return f"Chyba: {str(e)}"
 
 def assign_ids(start_state, state_counter=None, visited=None):
     if state_counter is None:
@@ -130,12 +126,12 @@ def write_to_file(filename, content):
         file.write(content)
 
 if __name__ == "__main__":
-    calc = Generator()
+    generator = Generator()
     input_text = input("Enter regular expression:")
     print("Derivation tree:\n")
 
-    if input_text != "":
-        nka = calc.generate(input_text)
+    try:
+        nka = generator.generate(input_text)
         start_state = nka.start_state
 
         assign_ids(start_state)
@@ -153,3 +149,5 @@ if __name__ == "__main__":
         output_content = transition_table_content + "\n" + accepted_states_content + template
         write_to_file("nka.py", output_content)
         print("\n\nFile nka.py was generated")
+    except Exception as e:
+        print(f"Chyba: {str(e)}")
