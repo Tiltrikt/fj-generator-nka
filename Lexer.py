@@ -17,7 +17,6 @@ class Token:
         self.attribute = value
 
     def __repr__(self):
-        # Reťazcová reprezentácia tokenu
         if self.attribute is not None:
             return f"Token({self.type}, {self.attribute})"
         return f"Token({self.type})"
@@ -27,15 +26,14 @@ class Lexer:
     def __init__(self, input_text):
         self.input_text = input_text
         self.pos = 0
-        self.current_char = self.input_text[
-            0] if input_text else None
+        self.current_char = self.input_text[0] if input_text else None
 
     def advance(self):
         self.pos += 1
         if self.pos < len(self.input_text):
             self.current_char = self.input_text[self.pos]
         else:
-            self.current_char = None  # Dosiahli sme koniec textu
+            self.current_char = None
 
     def skip_whitespace(self):
         while self.current_char is not None and self.current_char.isspace():
@@ -69,7 +67,9 @@ class Lexer:
                 case '|':
                     self.advance()
                     return Token(TokenType.PIPE)
-
-            raise ValueError(f"Nerozpoznaný znak: '{self.current_char}'")
+                case _:
+                    token = Token(TokenType.SYMBOL, self.current_char)
+                    self.advance()
+                    return token
 
         return Token(TokenType.EOF)

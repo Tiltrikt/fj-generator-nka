@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-
 class NKA:
 
     def __init__(self, transition_table: dict, accepted_states: set):

@@ -1,133 +1,86 @@
 from Lexer import TokenType
 
+class StateNode:
+    def __init__(self):
+        self.transitions = {}  # Transitions from this state to other states.
 
-# Syntaktický analyzátor - implementuje rekurzívny zostup podľa gramatiky
+    def add_transition(self, symbol, destination_node):
+        if symbol not in self.transitions:
+            self.transitions[symbol] = set()
+        self.transitions[symbol].add(destination_node)
+
+
+class NKA:
+    def __init__(self):
+        self.start_state = None
+        self.accepted_states = set()
+
+    def get_all_destinations(self):
+       return self.accepted_states
+
+
 class Parser:
     def __init__(self, lexer):
-        self.lexer = lexer  # Lexikálny analyzátor, ktorý dodáva tokeny
-        self.current_token = self.lexer.get_next_token()  # Načítame prvý token
+        self.lexer = lexer
+        self.current_token = self.lexer.get_next_token()
 
     def consume(self, expected_token_type):
-        """
-        Kontrolná metóda - kontroluje, či aktuálny token je očakávaného typu.
-        Ak áno, posunie sa na ďalší token. Ak nie, vyhodí chybu.
-
-        Táto metóda implementuje prediktívnu analýzu - očakávame konkrétny token
-        na základe gramatických pravidiel.
-        """
         if self.current_token.type == expected_token_type:
-            self.current_token = self.lexer.get_next_token()  # Prejdeme na ďalší token
+            self.current_token = self.lexer.get_next_token()
         else:
             raise SyntaxError(f"Syntaktická chyba: očakávaný token {expected_token_type}, "
-                              f"získaný {self.current_token.type}")
+                               f"získaný {self.current_token.type}")
 
-    def regular(self):
+    def regular(self) -> NKA:
         result = self.alternative()
         return result
 
-    def alternative(self):
+    def alternative(self) -> NKA:
         result = self.sequence()
         while self.current_token.type == TokenType.PIPE:
-            token = self.current_token
+            print("alternative")
             self.consume(TokenType.PIPE)
-            result += self.sequence()
+            left_nka = result
+            right_nka = self.sequence()
+
+            new_start = StateNode()
+            alternative_nka = NKA()
+
+            alternative_nka.start_state = new_start
+            new_start.add_transition(left_nka, left_nka.start_state)
+            new_start.add_transition('', right_nka.start_state)
+            alternative_nka.accepted_states = left_nka.accepted_states.union(right_nka.accepted_states)
+            result = alternative_nka
+
         return result
 
-    def sequence(self):
+    def sequence(self) -> NKA:
         result = self.element()
         while self.current_token.type == TokenType.SYMBOL:
+            print("sequence")
+            left_nka = result
+            right_nka = self.element()
 
-    def element(self):
-        pass
+            for accept_state in left_nka.accepted_states:
+                accept_state.add_transition('', right_nka.start_state)
 
-    def E(self):
-        """
-        Implementuje gramatické pravidlo:
-        E ::= T {("+" | "-") T}
-
-        Spracuje sčítanie a odčítanie s ľavou asociativitou.
-        Najnižšia priorita operácií v gramatike.
-
-        """
-        # Najprv vyhodnotíme prvé F
-        result = self.T()
-
-        # Potom spracujeme všetky ďalšie operácie sčítania a odčítania
-        while self.current_token.type in (TokenType.PLUS, TokenType.MINUS):
-            token = self.current_token
-
-            if token.type == TokenType.PLUS:
-                self.consume(TokenType.PLUS)  # Overíme a posunieme sa za '+'
-                result += self.T()  # Vyhodnotíme hodnotu F a pripočítame ju do výsledku
-
-            elif token.type == TokenType.MINUS:
-                self.consume(TokenType.MINUS)  # Overíme a posunieme sa za '-'
-                result -= self.T()  # Vyhodnotíme hodnotu F a odčítame ju od výsledku
-
+            left_nka.accepted_states = right_nka.accepted_states
+            result = left_nka
         return result
 
-    def T(self):
-        """
-        Implementuje gramatické pravidlo:
-        T ::= F {"*" F}
-        """
+    def element(self) -> NKA:
+        if self.current_token.type == TokenType.SYMBOL:
+            symbol = self.current_token.attribute
 
-        result = self.F()
+            start_node = StateNode()
+            accept_node = StateNode()
+            nka = NKA()
 
-        while self.current_token.type == TokenType.MULTIPLY:
-            self.consume(TokenType.MULTIPLY)
-            result *= self.F()
+            start_node.add_transition(symbol, accept_node)
+            nka.start_state = start_node
+            nka.accepted_states.add(accept_node)
+            self.consume(TokenType.SYMBOL)
+            return nka
 
-        return result
-
-    def F(self):
-        """
-        TODO: Implementujte gramatické pravidlo:
-        F ::= P ["^" F]
-        """
-
-        result = self.P()
-
-        if self.current_token.type == TokenType.POWER:
-            self.consume(TokenType.POWER)  # Overíme a posunieme sa za '+'
-            result = pow(result, self.F())  # Vyhodnotíme hodnotu F a pripočítame ju do výsledku
-
-        return result
-
-    def P(self):
-        """
-        Implementuje gramatické pravidlo:
-        P ::= ["-"] cislo | "(" E ")"
-
-        Spracuje základné prvky výrazu - buď číslo alebo výraz v zátvorke.
-        Najvyššia priorita v gramatike.
-        """
-        token = self.current_token
-        if token.type == TokenType.MINUS:
-            self.consume(TokenType.MINUS)
-            token = self.current_token
-            self.consume(TokenType.NUMBER)
-            return -1 * token.attribute
-
-        if token.type == TokenType.NUMBER:
-            # Jednoducho vrátime hodnotu čísla
-            self.consume(TokenType.NUMBER)  # Overíme a posunieme sa za číslo
-            return token.attribute
-
-        if token.type == TokenType.LPAREN:
-            # Vyhodnotíme výraz v zátvorkách
-            self.consume(TokenType.LPAREN)  # Overíme a posunieme sa za '('
-            result = self.E()  # Rekurzívne vyhodnotíme výraz medzi zátvorkami
-            self.consume(TokenType.RPAREN)  # Overíme a posunieme sa za ')'
-            return result
-
-        else:
-            # Ak nie je ani číslo ani zátvorka, ide o chybu
-            raise SyntaxError(f"Syntaktická chyba: Neočakávaný token {token}")
-
-    def parse(self):
-        """
-        Začne syntaktickú analýzu a vráti výsledok výrazu.
-        Vstupný bod pre parser.
-        """
-        return self.E()  # Začíname volaním funkcie zopdovedajúcej zažiatočnému symbolu gramatiky
+    def parse(self) -> NKA:
+        return self.regular()
