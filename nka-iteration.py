@@ -1,3 +1,20 @@
+_transition_table = {
+    0: {'': {1, 9}},
+    1: {'1': {2}},
+    2: {'': {3}},
+    3: {'': {4}},
+    4: {'': {5, 7}},
+    5: {'0': {6}},
+    6: {'': {3}},
+    7: {'1': {8}},
+    8: {'': {3}},
+    9: {'0': {10}},
+    10: {},
+}
+_accepted_states = {
+    8, 10, 3, 6,
+}
+
 from copy import deepcopy
 
 class NKA:
@@ -31,42 +48,17 @@ class NKA:
                         return True
         return False
 
-
-# _transition_table = {
-#     0: {'': {1, 3}, '1': {2, 4}},
-#     1: {'0': {2}},
-#     2: {},
-#     3: {'1': {4}},
-#     4: {'': {5}},
-#     5: {'': {6}},
-#     6: {'': {7, 9}},
-#     7: {'0': {8}},
-#     8: {'': {6}},
-#     9: {'1': {10}},
-#     10: {'': {6}}
-# }
-
-_transition_table = {
-    0: {'': {1}},
-    1: {'': {2, 4}},
-    2: {'0': {3}},
-    3: {'': {0}},
-    4: {'1': {5}},
-    5: {'': {0}},
-}
-_accepted_states = {
-    0, 3, 5,
-}
-
-
 def main():
-    word = input("Enter a word: ")
+    input_text = input("Enter a word: ")
     nka = NKA(_transition_table, _accepted_states)
-    if nka.evaluate_expression(word, 0):
-        print(f'Word "{word}" accepted')
-    else:
-        print(f'Word "{word}" rejected')
 
+    while input_text != "quit":
+        if input_text != "":
+            if nka.evaluate_expression(input_text, 0):
+                print(f'Word "{input_text}" ACCEPTED')
+            else:
+                print(f'Word "{input_text}" REJECTED')
+        input_text = input("Enter a word: ")
 
 if __name__ == '__main__':
     main()

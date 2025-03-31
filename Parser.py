@@ -1,3 +1,4 @@
+import logging
 from Lexer import TokenType
 
 class StateNode:
@@ -10,6 +11,9 @@ class StateNode:
             self.transitions[symbol] = set()
         self.transitions[symbol].add(destination_node)
 
+    def __str__(self):
+        return f"StateNode(id={self.id}, transitions={self.transitions})"
+
 
 class NKA:
     def __init__(self):
@@ -17,7 +21,10 @@ class NKA:
         self.accepted_states = set()
 
     def get_all_destinations(self):
-       return self.accepted_states
+        return self.accepted_states
+
+    def __str__(self):
+        return f"NKA(start_state={self.start_state}, accepted_states={self.accepted_states})"
 
 
 class Parser:
@@ -56,7 +63,7 @@ class Parser:
 
     def sequence(self) -> NKA:
         result = self.element()
-        while self.current_token.type == TokenType.SYMBOL:
+        while self.current_token.type in (TokenType.SYMBOL, TokenType.LPAREN, TokenType.LCBRA, TokenType.LBRACK):
             left_nka = result
             right_nka = self.element()
 
@@ -113,6 +120,7 @@ class Parser:
             nka = optional_nka
 
             self.consume(TokenType.RBRACK)
+
         return nka
 
     def parse(self) -> NKA:

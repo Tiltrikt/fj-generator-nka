@@ -1,6 +1,57 @@
 from Lexer import Lexer
 from Parser import Parser
 
+template = """
+
+from copy import deepcopy
+
+class NKA:
+
+    def __init__(self, transition_table: dict, accepted_states: set):
+        self.transition_table = transition_table
+        self.accepted_states = accepted_states
+
+    def evaluate_expression(self, expression: str, actual_state):
+        if len(expression) == 0:
+            if actual_state in _accepted_states:
+                return True
+            for key in self.transition_table[actual_state].keys():
+                if key == '':
+                    for state in self.transition_table[actual_state].get(key):
+                        result = self.evaluate_expression(deepcopy(expression), state)
+                        if result:
+                            return True
+            return False
+
+        for key in self.transition_table[actual_state].keys():
+            if key == '':
+                for state in self.transition_table[actual_state].get(key):
+                    result = self.evaluate_expression(deepcopy(expression), state)
+                    if result:
+                        return True
+            elif key == expression[0]:
+                for state in self.transition_table[actual_state].get(key):
+                    result = self.evaluate_expression(deepcopy(expression[1:]), state)
+                    if result:
+                        return True
+        return False
+
+def main():
+    input_text = input("Enter a word: ")
+    nka = NKA(_transition_table, _accepted_states)
+
+    while input_text != "quit":
+        if input_text != "":
+            if nka.evaluate_expression(input_text, 0):
+                print(f'Word "{input_text}" ACCEPTED')
+            else:
+                print(f'Word "{input_text}" REJECTED')
+        input_text = input("Enter a word: ")
+
+if __name__ == '__main__':
+    main()
+"""
+
 class Calculator:
     def evaluate(self, expression):
         try:
@@ -33,14 +84,16 @@ def assign_ids(start_state, state_counter=None, visited=None):
             assign_ids(next_state, state_counter, visited)
 
 
-def print_transition_table(start_state):
+def capture_transition_table(start_state):
     transition_table = collect_transitions(start_state)
 
-    print("_transition_table = {")
+    result = "_transition_table = {\n"
     for state_id, transitions in transition_table.items():
         transition_str = ", ".join(f"'{symbol}': {destination_ids}" for symbol, destination_ids in transitions.items())
-        print(f"    {state_id}: {{{transition_str}}},")
-    print("}")
+        result += f"    {state_id}: {{{transition_str}}},\n"
+    result += "}"
+
+    return result
 
 
 def collect_transitions(start_state, visited=None):
@@ -72,24 +125,30 @@ def collect_transitions(start_state, visited=None):
     return transition_table
 
 
+def write_to_file(filename, content):
+    with open(filename, 'w') as file:
+        file.write(content)
+
 if __name__ == "__main__":
     calc = Calculator()
-    input_text = input("> ")
+    input_text = input("Enter regular expression:")
 
-    while input_text != "quit":
-        if input_text != "":
-            nka = calc.evaluate(input_text)
-            start_state = nka.start_state
+    if input_text != "":
+        nka = calc.evaluate(input_text)
+        start_state = nka.start_state
 
-            assign_ids(start_state)
+        assign_ids(start_state)
 
-            print_transition_table(start_state)
+        transition_table_content = capture_transition_table(start_state)
 
-            accepted_states = set()
-            for state in nka.accepted_states:
-                accepted_states.add(state.id)
+        accepted_states = set()
+        for state in nka.accepted_states:
+            accepted_states.add(state.id)
 
-            print("_accepted_states = {")
-            print(f"    {', '.join(map(str, accepted_states))},")
-            print("}")
-        input_text = input("> ")
+        accepted_states_content = "_accepted_states = {\n"
+        accepted_states_content += f"    {', '.join(map(str, accepted_states))},\n"
+        accepted_states_content += "}"
+
+        output_content = transition_table_content + "\n" + accepted_states_content + template
+        write_to_file("nka.py", output_content)
+        print("File nka.py was generated");
